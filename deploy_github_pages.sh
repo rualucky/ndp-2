@@ -4,20 +4,13 @@
 set -e
 
 # build
-npm run build
+pnpm run build
 
-# navigate into the build output directory
-cd dist
+git add dist -f
 
-# if you are deploying to a custom domain
-# echo 'www.example.com' > CNAME
+git commit -m "Adding dist"
 
-git init
-git checkout main
-git add -A
-git commit -m 'deploy'
+git subtree push --prefix dist origin gh-pages
 
 # if you are deploying to https://<USERNAME>.github.io/<REPO>
-git push -f git@github.com:rualucky/ndp-2.git main:gh-pages
-
-cd -
+#git push -f git@github.com:rualucky/ndp-2.git main:gh-pages
