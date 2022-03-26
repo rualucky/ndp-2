@@ -1,5 +1,7 @@
+import { TableStickyHeader } from '../components/tables/TableStickyHeader.vue'
 <script setup>
 import { ref } from 'vue'
+import TableStickyHeader from '../components/tables/TableStickyHeader.vue';
 
 defineProps({
   msg: String
@@ -9,9 +11,7 @@ const count = ref(0)
 </script>
 
 <template>
-   <h1 class="text-3xl font-bold underline">
-       Detail page
-  </h1>
+  <TableStickyHeader/> 
 </template>
 
 <style scoped>
