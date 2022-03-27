@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import Dropdown from '../components/dropdowns/Dropdown.vue'
 
 defineProps({
     msg: String
@@ -45,6 +46,7 @@ const toggleDarkMode = (event) => {
 </script>
 
 <template>
+   <Dropdown/>
     <div class="relative overflow-x-auto shadow-md">
         <div class="flex">
             <div class="p-4 pl-0 justify-start">
