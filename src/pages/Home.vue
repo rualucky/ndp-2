@@ -1,12 +1,10 @@
 <script setup>
 import { ref } from 'vue'
-import Dropdown from '../components/dropdowns/Dropdown.vue'
+import DropdownHomePage from '../components/dropdowns/DropdownHomePage.vue'
 
 defineProps({
     msg: String
 })
-
-const isChecked = ref(localStorage.getItem('darkClass') === 'dark')
 
 const items = ref([
     { name: 'Apple MacBook Pro 17', color: 'Sliver', category: 'Laptop', price: '$2999' },
@@ -36,17 +34,9 @@ const items = ref([
     { name: 'Apple Watch 5', color: 'Red', category: 'Wearables', price: '$999' },
 ])
 
-const toggleDarkMode = (event) => {
-    const root = document.getElementsByTagName('html')[0];
-    const theme = event.target.checked ? 'dark' : 'light'
-
-    localStorage.setItem('darkClass', theme)
-    root.setAttribute('class', theme)
-}
 </script>
 
 <template>
-   <Dropdown/>
     <div class="relative overflow-x-auto shadow-md">
         <div class="flex">
             <div class="p-4 pl-0 justify-start">
@@ -80,28 +70,7 @@ const toggleDarkMode = (event) => {
             <div
                 class="ml-auto flex items-center"
             >
-                <label for="toggleB" class="flex items-center cursor-pointer">
-                    <!-- toggle -->
-                    <!-- <div class="ml-3 text-gray-700 font-medium">Dark mode</div> -->
-
-                    <div class="relative">
-                        <!-- input -->
-                        <input
-                            type="checkbox"
-                            id="toggleB"
-                            class="sr-only"
-                            v-model="isChecked"
-                            @change="toggleDarkMode"
-                        />
-                        <!-- line -->
-                        <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
-                        <!-- dot -->
-                        <div
-                            class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"
-                        ></div>
-                    </div>
-                    <!-- label -->
-                </label>
+            <DropdownHomePage />
             </div>
          
         </div>

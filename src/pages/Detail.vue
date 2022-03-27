@@ -1,4 +1,3 @@
-import { TableStickyHeader } from '../components/tables/TableStickyHeader.vue'
 <script setup>
 import { ref } from 'vue'
 import TableStickyHeader from '../components/tables/TableStickyHeader.vue';
