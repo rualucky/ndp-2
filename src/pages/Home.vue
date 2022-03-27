@@ -75,12 +75,22 @@ const toggleDarkMode = (event) => {
                 </div>
             </div>
 
-            <div class="flex items-center">
+            <div
+                class="ml-auto flex items-center"
+            >
                 <label for="toggleB" class="flex items-center cursor-pointer">
                     <!-- toggle -->
+                    <!-- <div class="ml-3 text-gray-700 font-medium">Dark mode</div> -->
+
                     <div class="relative">
                         <!-- input -->
-                        <input type="checkbox" id="toggleB" class="sr-only" v-model="isChecked" @change="toggleDarkMode" />
+                        <input
+                            type="checkbox"
+                            id="toggleB"
+                            class="sr-only"
+                            v-model="isChecked"
+                            @change="toggleDarkMode"
+                        />
                         <!-- line -->
                         <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
                         <!-- dot -->
@@ -89,10 +99,11 @@ const toggleDarkMode = (event) => {
                         ></div>
                     </div>
                     <!-- label -->
-                    <div class="ml-3 text-gray-700 font-medium">Dark mode</div>
                 </label>
             </div>
+         
         </div>
+
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead
                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
