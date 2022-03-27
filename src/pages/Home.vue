@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import DropdownHomePage from '../components/dropdowns/DropdownHomePage.vue'
+import ModalCRUD from '../components/modals/ModalCRUD.vue'
 
 defineProps({
     msg: String
@@ -105,7 +106,7 @@ const items = ref([
                         <a
                             href="#"
                             class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                        >Edit</a>
+                        ><ModalCRUD/></a>
                     </td>
                 </tr>
             </tbody>
