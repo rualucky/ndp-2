@@ -11,6 +11,10 @@ const router = createRouter({
       path: "/detail",
       component: () => import("../pages/Detail.vue"),
     },
+    {
+      path: "/sign-in",
+      component: () => import("../pages/SignIn.vue"),
+    }
   ],
 });
 

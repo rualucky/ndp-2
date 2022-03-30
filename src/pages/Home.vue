@@ -1,43 +1,54 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, inject, onBeforeMount, onMounted, watch } from 'vue'
 import DropdownHomePage from '../components/dropdowns/DropdownHomePage.vue'
 import ModalCRUD from '../components/modals/ModalCRUD.vue'
+import CSVImport from '../components/excels/csv/CSVImport.vue'
+import IsLoggedIn from '../components/auths/IsLoggedIn.vue'
+import router from '../router'
+import { debounce } from 'lodash'
 
-defineProps({
-    msg: String
-})
+const q = ref('')
 
-const items = ref([
-    { name: 'Apple MacBook Pro 17', color: 'Sliver', category: 'Laptop', price: '$2999' },
-    { name: 'Microsoft Surface Pro', color: 'White', category: 'Laptop PC', price: '$1999' },
-    { name: 'Magic Mouse 2', color: 'Black', category: 'Accessories', price: '$99' },
-    { name: 'Google Pixel Phone', color: 'Gray', category: 'Phone', price: '$799' },
-    { name: 'Apple Watch 5', color: 'Red', category: 'Wearables', price: '$999' },
-    { name: 'Apple MacBook Pro 17', color: 'Sliver', category: 'Laptop', price: '$2999' },
-    { name: 'Microsoft Surface Pro', color: 'White', category: 'Laptop PC', price: '$1999' },
-    { name: 'Magic Mouse 2', color: 'Black', category: 'Accessories', price: '$99' },
-    { name: 'Google Pixel Phone', color: 'Gray', category: 'Phone', price: '$799' },
-    { name: 'Apple Watch 5', color: 'Red', category: 'Wearables', price: '$999' },
-    { name: 'Apple MacBook Pro 17', color: 'Sliver', category: 'Laptop', price: '$2999' },
-    { name: 'Microsoft Surface Pro', color: 'White', category: 'Laptop PC', price: '$1999' },
-    { name: 'Magic Mouse 2', color: 'Black', category: 'Accessories', price: '$99' },
-    { name: 'Google Pixel Phone', color: 'Gray', category: 'Phone', price: '$799' },
-    { name: 'Apple Watch 5', color: 'Red', category: 'Wearables', price: '$999' },
-    { name: 'Apple MacBook Pro 17', color: 'Sliver', category: 'Laptop', price: '$2999' },
-    { name: 'Microsoft Surface Pro', color: 'White', category: 'Laptop PC', price: '$1999' },
-    { name: 'Magic Mouse 2', color: 'Black', category: 'Accessories', price: '$99' },
-    { name: 'Google Pixel Phone', color: 'Gray', category: 'Phone', price: '$799' },
-    { name: 'Apple Watch 5', color: 'Red', category: 'Wearables', price: '$999' },
-    { name: 'Apple MacBook Pro 17', color: 'Sliver', category: 'Laptop', price: '$2999' },
-    { name: 'Microsoft Surface Pro', color: 'White', category: 'Laptop PC', price: '$1999' },
-    { name: 'Magic Mouse 2', color: 'Black', category: 'Accessories', price: '$99' },
-    { name: 'Google Pixel Phone', color: 'Gray', category: 'Phone', price: '$799' },
-    { name: 'Apple Watch 5', color: 'Red', category: 'Wearables', price: '$999' },
+const $api = inject('$api')
+const items = ref([])
+const columnsName = ref([
+    'Name', 'Mobile', 'Email', 'Address', 'Notes', 'Source', 'Status'
 ])
 
+const fetchData = (q = '') => {
+    const configs = {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+        contentType: 'application/json'
+    }
+    let query = q ? '?' : ''
+    if (q) {
+        query += `q=${q}`
+    }
+    const url = `https://demo.nodeapis.com/contacts${query}`
+    $api.get(url, configs).then(response => {
+        items.value = response?.data?.data
+    }).catch(error => {
+        $api.post('https://demo.nodeapis.com/auth/token/refresh_token', { refresh_token: localStorage.getItem('refresh_token') }, configs).then(response => {
+            if (response?.data) {
+                $api.get(url, configs).then(response => {
+                    items.value = response?.data?.data
+                })
+            }
+        }).catch(error => router.push('/sign-in'))
+    })
+}
+
+onBeforeMount(() => console.log('Home: before mount'))
+
+onMounted(() => {
+    fetchData()
+})
+
+watch(q, debounce(() => fetchData(q.value), 300))
 </script>
 
 <template>
+    <IsLoggedIn />
     <div class="relative overflow-x-auto shadow-md">
         <div class="flex">
             <div class="p-4 pl-0 justify-start">
@@ -64,27 +75,25 @@ const items = ref([
                         id="table-search"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-80 pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         placeholder="Search for items"
+                        v-model="q"
                     />
                 </div>
             </div>
-
-            <div
-                class="ml-auto flex items-center"
-            >
-            <DropdownHomePage />
+            <div class="flex items-center">
             </div>
-         
+
+            <div class="ml-auto flex items-center">
+                <DropdownHomePage />
+            </div>
         </div>
 
+                <CSVImport />
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead
                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
             >
                 <tr>
-                    <th scope="col" class="px-6 py-3">Product name</th>
-                    <th scope="col" class="px-6 py-3">Color</th>
-                    <th scope="col" class="px-6 py-3">Category</th>
-                    <th scope="col" class="px-6 py-3">Price</th>
+                    <th v-for="column in columnsName" scope="col" class="px-6 py-3">{{ column }}</th>
                     <th scope="col" class="px-6 py-3">
                         <span class="sr-only">Edit</span>
                     </th>
@@ -92,21 +101,31 @@ const items = ref([
             </thead>
             <tbody>
                 <tr
-                    v-for="item in items"
+                    v-for="(item, index) in items" :key="item.id"
                     class="border-b dark:bg-gray-800 dark:border-gray-700 odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                     <th
                         scope="row"
                         class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
                     >{{ item.name }}</th>
-                    <td class="px-6 py-4">{{ item.color }}</td>
-                    <td class="px-6 py-4">{{ item.category }}</td>
-                    <td class="px-6 py-4">{{ item.price }}</td>
-                    <td class="px-6 py-4 text-right">
+                    <td class="px-6 py-4">{{ item.mobile }}</td>
+                    <td class="px-6 py-4">{{ item.email }}</td>
+                    <td class="px-6 py-4">{{ item.address }}</td>
+                    <td class="px-6 py-4">{{ item.notes }}</td>
+                    <td class="px-6 py-4">{{ item.contact_source.name }}</td>
+                    <td class="px-6 py-4">{{ item.status }}</td>
+                    <td class="px-6 py-4">
                         <a
                             href="#"
                             class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                        ><ModalCRUD/></a>
+                        >
+                            <ModalCRUD
+                                :index="index"
+                                :data="item"
+                                @reload1="() => console.log('MOA1')"
+                                @reload2="() => console.log('MOA2')"
+                            />
+                        </a>
                     </td>
                 </tr>
             </tbody>
