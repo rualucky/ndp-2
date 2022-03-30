@@ -1,8 +1,6 @@
 <script setup>
 import { ref, inject, onBeforeMount, onMounted, watch } from 'vue'
 import DropdownHomePage from '../components/dropdowns/DropdownHomePage.vue'
-import ModalCRUD from '../components/modals/ModalCRUD.vue'
-import CSVImport from '../components/excels/csv/CSVImport.vue'
 import IsLoggedIn from '../components/auths/IsLoggedIn.vue'
 import router from '../router'
 import { debounce } from 'lodash'
@@ -35,6 +33,25 @@ const fetchData = (q = '') => {
                 })
             }
         }).catch(error => router.push('/sign-in'))
+    })
+}
+
+const exportCSV = () => {
+    const configs = {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+        contentType: 'application/json'
+    }
+
+    $api.get('https://demo.nodeapis.com/contacts/csv', configs).then(response => {
+        var downloadLink = document.createElement("a");
+        var blob = new Blob(["\ufeff", response.data]);
+        var url = URL.createObjectURL(blob);
+        downloadLink.href = url;
+        downloadLink.download = `Contacts - ${new Date().toLocaleDateString('vi-VN')}`;
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     })
 }
 
@@ -79,7 +96,15 @@ watch(q, debounce(() => fetchData(q.value), 300))
                     />
                 </div>
             </div>
-            <div class="flex items-center"></div>
+            <div class="flex items-center">
+                <div class="flex space-x-2 justify-center">
+                    <button
+                        type="button"
+                        class="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
+                        @click="exportCSV"
+                    >Export</button>
+                </div>
+            </div>
 
             <div class="ml-auto flex items-center">
                 <DropdownHomePage />
