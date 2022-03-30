@@ -8,7 +8,7 @@ let getAccessTokenAt
 let expiresIn
 
 onBeforeMount(() => {
-    console.log('Before mount IsLoggedIn')
+    // console.log('Before mount IsLoggedIn')
     getAccessTokenAt = +localStorage.getItem('getAccessTokenAt')
     expiresIn = +localStorage.getItem('expires_in')
     if (+new Date() - getAccessTokenAt < expiresIn * 1000) {
@@ -31,7 +31,6 @@ onBeforeMount(() => {
 })
 
 onBeforeUnmount(() => {
-    // clear up listener
-    console.log('Before unmount IsLoggedIn')
+    // console.log('Before unmount IsLoggedIn')
 })
 </script>

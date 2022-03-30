@@ -7,9 +7,10 @@ const router = createRouter({
        path: "/",
        component: () => import("../pages/Home.vue"),
      },
-    {
-      path: "/detail",
-      component: () => import("../pages/Detail.vue"),
+     {
+      path: '/contacts/:id',
+      name: 'contacts',
+      component: () => import("../pages/DetailContact.vue")
     },
     {
       path: "/sign-in",

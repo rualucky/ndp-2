@@ -38,7 +38,7 @@ const fetchData = (q = '') => {
     })
 }
 
-onBeforeMount(() => console.log('Home: before mount'))
+// onBeforeMount(() => console.log('Home: before mount'))
 
 onMounted(() => {
     fetchData()
@@ -86,8 +86,6 @@ watch(q, debounce(() => fetchData(q.value), 300))
                 <DropdownHomePage />
             </div>
         </div>
-
-                <CSVImport />
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead
                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
@@ -119,12 +117,7 @@ watch(q, debounce(() => fetchData(q.value), 300))
                             href="#"
                             class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
                         >
-                            <ModalCRUD
-                                :index="index"
-                                :data="item"
-                                @reload1="() => console.log('MOA1')"
-                                @reload2="() => console.log('MOA2')"
-                            />
+                         <router-link :to="{ name: 'contacts', params: { id: item.id }}"> Detail </router-link>
                         </a>
                     </td>
                 </tr>
