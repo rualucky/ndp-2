@@ -47,7 +47,7 @@ const exportCSV = () => {
         var blob = new Blob(["\ufeff", response.data]);
         var url = URL.createObjectURL(blob);
         downloadLink.href = url;
-        downloadLink.download = `Contacts - ${new Date().toLocaleDateString('vi-VN')}`;
+        downloadLink.download = `Contacts - ${new Date().toLocaleDateString('vi-VN')}.csv`;
 
         document.body.appendChild(downloadLink);
         downloadLink.click();
