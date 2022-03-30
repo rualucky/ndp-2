@@ -12,7 +12,7 @@ const q = ref('')
 const $api = inject('$api')
 const items = ref([])
 const columnsName = ref([
-    'Name', 'Mobile', 'Email', 'Address', 'Notes', 'Source', 'Status'
+    'Name', 'Contact', 'Address', 'Notes', 'Source', 'Status'
 ])
 
 const fetchData = (q = '') => {
@@ -79,8 +79,7 @@ watch(q, debounce(() => fetchData(q.value), 300))
                     />
                 </div>
             </div>
-            <div class="flex items-center">
-            </div>
+            <div class="flex items-center"></div>
 
             <div class="ml-auto flex items-center">
                 <DropdownHomePage />
@@ -99,25 +98,32 @@ watch(q, debounce(() => fetchData(q.value), 300))
             </thead>
             <tbody>
                 <tr
-                    v-for="(item, index) in items" :key="item.id"
+                    v-for="(item, index) in items"
+                    :key="item.id"
                     class="border-b dark:bg-gray-800 dark:border-gray-700 odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                     <th
                         scope="row"
                         class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
                     >{{ item.name }}</th>
-                    <td class="px-6 py-4">{{ item.mobile }}</td>
-                    <td class="px-6 py-4">{{ item.email }}</td>
+                    <td class="px-6 py-4 flex flex-col">
+                        <span>{{ item.mobile }}</span>
+                        {{ item.email }}
+                    </td>
+                    <td class="px-6 py-4 hidden">{{ item.email }}</td>
                     <td class="px-6 py-4">{{ item.address }}</td>
                     <td class="px-6 py-4">{{ item.notes }}</td>
                     <td class="px-6 py-4">{{ item.contact_source.name }}</td>
-                    <td class="px-6 py-4">{{ item.status }}</td>
+                    <td class="px-6 py-4 flex flex-col">
+                        <span>{{ item.status }}</span>
+                        <span>{{ item.contact_result.name }}</span>
+                    </td>
                     <td class="px-6 py-4">
                         <a
                             href="#"
                             class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
                         >
-                         <router-link :to="{ name: 'contacts', params: { id: item.id }}"> Detail </router-link>
+                            <router-link :to="{ name: 'contacts', params: { id: item.id } }">Detail</router-link>
                         </a>
                     </td>
                 </tr>
