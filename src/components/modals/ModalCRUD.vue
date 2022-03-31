@@ -174,30 +174,10 @@ onMounted(() => {
   console.log('on mounted modals')
 })
 
-// const get = (id) => {
-//   console.log(id)
-//   const configs = {
-//         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-//         contentType: 'application/json'
-//     }
-//   $api.get(`https://demo.nodeapis.com/contacts/${id}`, configs).then(response => {
-//    if (response && response.data) {
-//      const data = response.data.data
-//      this.name.value = data.name
-//      mobile.value = data.mobile
-//      email.value = data.email
-//      address.value= data.address
-//      status.value = data.status
-//      contact_source.value = data.contact_source
-//    }
-//   })
-// }
-
 const edit = (data) => {
   const rawData = isProxy(data) ? toRaw(data) : data
   const configs = {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-        contentType: 'application/json'
     }
   $api.patch(`https://demo.nodeapis.com/contacts/${rawData.id}`, rawData, configs).then(response => {
    if (response && response.status === 200) {

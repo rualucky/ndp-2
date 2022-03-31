@@ -30,7 +30,10 @@ const fetchData = (q = '') => {
         $api.post('https://demo.nodeapis.com/auth/token/refresh_token', { refresh_token: localStorage.getItem('refresh_token') }, configs).then(response => {
             if (response?.data) {
                 $api.get(url, configs).then(response => {
-                    items.value = response?.data?.data
+                    const data = response?.data?.data
+                    data.contact_result = null
+                    item.value = data
+                    //items.value = response?.data?.data
                 })
             }
         }).catch(error => router.push('/sign-in'))
@@ -144,7 +147,7 @@ watch(q, debounce(() => fetchData(q.value), 300))
                     <td class="px-6 py-4">{{ item.contact_source.name }}</td>
                     <td class="px-6 py-4 flex flex-col">
                         <span>{{ item.status }}</span>
-                        <span>{{ item.contact_result.name }}</span>
+                        <span>{{ item.contact_result?.name }}</span>
                     </td>
                     <td class="px-6 py-4">
                         <a

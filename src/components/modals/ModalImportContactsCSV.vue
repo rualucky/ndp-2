@@ -6,7 +6,6 @@ const $api = inject('$api')
 const file = ref(null)
 const contactSource = ref('')
 const isValid = ref(true)
-const statusMessage = ref('')
 const isImportSuccess = ref(false)
 const isProcessing = ref(false)
 
