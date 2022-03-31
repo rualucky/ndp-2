@@ -34,14 +34,14 @@ const get = (id) => {
     isError.value = false
     if (response && response.data) {
       const data = response.data.data
-      name.value = data.name
-      mobile.value = data.mobile
-      email.value = data.email
-      address.value = data.address
-      notes.value = data.notes
-      contactSource.value = data.contact_source
-      contactStatus.value = data.status
-      contactResultId.value = data.contact_result?.id
+      name.value = data?.name
+      mobile.value = data?.mobile
+      email.value = data?.email
+      address.value = data?.address
+      notes.value = data?.notes
+      contactSource.value = data?.contact_source
+      contactStatus.value = data?.status
+      contactResultId.value = data?.contact_result?.id
     }
   }).catch(error => {
     console.log(error)
@@ -52,7 +52,7 @@ const get = (id) => {
 const edit = (id, data) => {
   isProcessing.value = true
   const configs = {
-    headers: { 
+    headers: {
       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
     },
   }
