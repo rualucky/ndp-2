@@ -52,8 +52,9 @@ const get = (id) => {
 const edit = (id, data) => {
   isProcessing.value = true
   const configs = {
-    headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-    contentType: 'application/json'
+    headers: { 
+      Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+    },
   }
   $api.patch(`https://demo.nodeapis.com/contacts/${id}`, data, configs).then(response => {
     if (response && response.status === 200) {
