@@ -209,7 +209,7 @@ watch(q, debounce(() => fetchData(q.value, offset.value, limit.value), 300))
                 Showing
                 <span class="font-semibold text-gray-900">{{ fromEntry }}</span> to
                 <span class="font-semibold text-gray-900">{{ toEntry }}</span> of
-                <span class="font-semibold text-gray-900">{{ totalEntries }}</span> Entries
+                <span class="font-semibold text-gray-900">{{ totalEntries }}</span> Contacts
             </span>
             <!-- Buttons -->
             <div class="ml-auto flex items-center">
