@@ -9,17 +9,27 @@ import ModalImportContactsCSV from '../components/modals/ModalImportContactsCSV.
 
 const DEFAULT_LIMIT = 30
 const DEFAULT_OFFSET = 0
+const STATUS = {
+    KHACH_HANG_MOI: 'KhachHangMoi',
+    CHUA_LIEN_LAC_DUOC: 'ChuaLienLacDuoc'
+}
 
 const q = ref('')
 const page = ref(0)
 const offset = ref(DEFAULT_OFFSET)
 const limit = ref(DEFAULT_LIMIT)
 const totalEntries = ref(0)
+const isNameAsc = ref(true)
+const contactResults = ref([])
+const contactSources = ref([])
+const filterResultId = ref(0)
+const filterStatus = ref(0)
+const filterSourceId = ref(0)
 
 const $api = inject('$api')
 const items = ref([])
 const columnsName = ref([
-    'Name', 'Contact', 'Address', 'Notes', 'Source', 'Status'
+    'Contact', 'Address', 'Notes', 'Source', 'Status/Result'
 ])
 
 const checkQueryPrefix = (query) => {
@@ -33,12 +43,23 @@ const checkQueryPrefix = (query) => {
 const fetchData = (q = '', offset = DEFAULT_OFFSET, limit = DEFAULT_LIMIT) => {
     const configs = {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-        contentType: 'application/json'
     }
     let query = ''
     if (q) {
         query += `q=${q}`
     }
+    const filters = []
+    if (sortBySource.value) {
+        filters.push(sortBySource.value)
+    }
+    if (sortByStatus.value) {
+        filters.push(sortByStatus.value)
+    }
+    if (sortByResultIdQuery.value) {
+        filters.push(sortByResultIdQuery.value)
+    }
+    query += `${q ? '&' : ''}filter=${filters.join(',')}`
+    query += `&sort=${sortByNameQuery.value}`
     query += `&offset=${offset}&limit=${limit}`
     query = checkQueryPrefix(query)
     //console.log(query)
@@ -74,7 +95,7 @@ const previous = () => {
     if (page.value < 0) {
         page.value = 0
         offset.value = page.value * limit.value
-      return
+        return
     }
     fetchData(q.value, offset.value, limit.value)
 }
@@ -82,7 +103,6 @@ const previous = () => {
 const exportCSV = () => {
     const configs = {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-        contentType: 'application/json'
     }
 
     $api.get('https://demo.nodeapis.com/contacts/csv', configs).then(response => {
@@ -98,23 +118,56 @@ const exportCSV = () => {
     })
 }
 
-// onBeforeMount(() => console.log('Home: before mount'))
+const getContactResults = () => {
+    const configs = {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+    }
+    $api.get(`https://demo.nodeapis.com/contact-results/names`, configs).then(response => {
+        if (response && response.data) {
+            contactResults.value = response?.data?.data
+        }
+    })
+}
+
+const getContactSources = () => {
+    const configs = {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+    }
+    $api.get(`https://demo.nodeapis.com/contact-sources/names`, configs).then(response => {
+        if (response && response.data) {
+            contactSources.value = response?.data?.data
+        }
+    })
+}
 
 onMounted(() => {
     fetchData()
+    getContactResults()
+    getContactSources()
 })
 
-const fromEntry = computed(() => page.value * limit.value + 1)
+const sortByName = () => {
+    isNameAsc.value = !isNameAsc.value
+}
 
+const fromEntry = computed(() => totalEntries.value > 0 ? page.value * limit.value + 1 : 0) 
 const toEntry = computed(() => (page.value + 1) * limit.value > totalEntries.value ? totalEntries.value : (page.value + 1) * limit.value)
+const sortByNameQuery = computed(() => isNameAsc.value ? 'name.asc' : 'name.desc')
+const sortByResultIdQuery = computed(() => filterResultId.value ? `ResultId.${filterResultId.value}` : '')
+const sortByStatus = computed(() => filterStatus.value ? `Status.${filterStatus.value}` : '')
+const sortBySource = computed(() => filterSourceId.value ? `SourceId.${filterSourceId.value}` : '')
 
 watch(q, debounce(() => fetchData(q.value, offset.value, limit.value), 300))
+watch(isNameAsc, () => fetchData(q.value, offset.value, limit.value))
+watch(filterResultId, () => fetchData(q.value, offset.value, limit.value))
+watch(filterStatus, () => fetchData(q.value, offset.value, limit.value))
+watch(filterSourceId, () => fetchData(q.value, offset.value, limit.value))
 </script>
 
 <template>
     <IsLoggedIn />
     <div class="relative overflow-x-auto shadow-md">
-        <div class="flex">
+        <div class="flex items-center">
             <div class="p-4 pl-0 justify-start">
                 <label for="table-search" class="sr-only">Search</label>
                 <div class="relative mt-1">
@@ -137,24 +190,58 @@ watch(q, debounce(() => fetchData(q.value, offset.value, limit.value), 300))
                     <input
                         type="text"
                         id="table-search"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-80 pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-80 pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-tr rounded-br"
                         placeholder="Search for items"
                         v-model="q"
                     />
                 </div>
             </div>
-            <div class="flex items-center">
+            <div>
+                <select
+                    class="block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
+                    v-model="filterSourceId"
+                >
+                    <option value="0" disabled selected>Select Source</option>
+                    <option
+                        v-for="item in contactSources"
+                        :key="item.id"
+                        :value="item.id"
+                    >{{ item.name }}</option>
+                </select>
+            </div>
+            <div class="px-4">
+                <select
+                    class="block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
+                    v-model="filterStatus"
+                >
+                    <option value="0" disabled selected>Select Status</option>
+                    <option :value="STATUS.KHACH_HANG_MOI">{{ STATUS.KHACH_HANG_MOI }}</option>
+                    <option :value="STATUS.CHUA_LIEN_LAC_DUOC">{{ STATUS.CHUA_LIEN_LAC_DUOC }}</option>
+                </select>
+            </div>
+            <div>
+                <select
+                    class="block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
+                    v-model="filterResultId"
+                >
+                    <option value="0" disabled selected>Select Result</option>
+                    <option
+                        v-for="item in contactResults"
+                        :key="item.id"
+                        :value="item.id"
+                    >{{ item.name }}</option>
+                </select>
+            </div>
+
+            <div class="ml-auto flex items-center">
                 <ModalImportContactsCSV />
-                <div class="flex space-x-2 justify-center pl-4">
+                <div class="flex space-x-2 justify-center px-4">
                     <button
                         type="button"
                         class="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
                         @click="exportCSV"
                     >Export</button>
                 </div>
-            </div>
-
-            <div class="ml-auto flex items-center">
                 <DropdownHomePage />
             </div>
         </div>
@@ -163,6 +250,43 @@ watch(q, debounce(() => fetchData(q.value, offset.value, limit.value), 300))
                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
             >
                 <tr>
+                    <th scope="col" class="px-6 py-3">
+                        <div>
+                            <span class="flex items-center cursor-pointer" @click="sortByName">
+                                Name
+                                <svg
+                                    v-show="isNameAsc"
+                                    class="pl-1 w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                                    />
+                                </svg>
+                                <svg
+                                    v-show="!isNameAsc"
+                                    class="pl-1 w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M5 10l7-7m0 0l7 7m-7-7v18"
+                                    />
+                                </svg>
+                            </span>
+                        </div>
+                    </th>
                     <th v-for="column in columnsName" scope="col" class="px-6 py-3">{{ column }}</th>
                     <th scope="col" class="px-6 py-3">
                         <span class="sr-only">Edit</span>
