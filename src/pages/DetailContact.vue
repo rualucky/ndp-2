@@ -1,5 +1,5 @@
 <script setup>
-import { inject, ref, onBeforeMount, isProxy, toRaw } from 'vue'
+import { inject, ref, onBeforeMount } from 'vue'
 import { useRoute } from 'vue-router'
 import IsLoggedIn from '../components/auths/IsLoggedIn.vue'
 

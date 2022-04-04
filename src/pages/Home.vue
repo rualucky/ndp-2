@@ -1,6 +1,7 @@
 <script setup>
-import { ref, inject, onMounted, watch, computed } from 'vue'
+import { ref, inject, onMounted, watch, computed, shallowRef } from 'vue'
 import { debounce } from 'lodash'
+import { useRoute } from 'vue-router'
 
 import router from '../router'
 import DropdownHomePage from '../components/dropdowns/DropdownHomePage.vue'
@@ -14,6 +15,7 @@ const STATUS = {
     CHUA_LIEN_LAC_DUOC: 'ChuaLienLacDuoc'
 }
 
+const route = useRoute()
 const q = ref('')
 const page = ref(0)
 const offset = ref(DEFAULT_OFFSET)
@@ -149,6 +151,20 @@ onMounted(() => {
 const sortByName = () => {
     isNameAsc.value = !isNameAsc.value
 }
+const reloadData = () => {
+    offset.value = 0
+    page.value = 0
+    fetchData(q.value, offset.value, limit.value)
+}
+const removeAllFilters = () => {
+    filterResultId.value = 0
+    filterStatus.value = 0
+    filterSourceId.value = 0
+    reloadData()
+}
+// const updateRouteQuery = () => {
+
+// }
 
 const fromEntry = computed(() => totalEntries.value > 0 ? page.value * limit.value + 1 : 0) 
 const toEntry = computed(() => (page.value + 1) * limit.value > totalEntries.value ? totalEntries.value : (page.value + 1) * limit.value)
@@ -157,11 +173,16 @@ const sortByResultIdQuery = computed(() => filterResultId.value ? `ResultId.${fi
 const sortByStatus = computed(() => filterStatus.value ? `Status.${filterStatus.value}` : '')
 const sortBySource = computed(() => filterSourceId.value ? `SourceId.${filterSourceId.value}` : '')
 
-watch(q, debounce(() => fetchData(q.value, offset.value, limit.value), 300))
 watch(isNameAsc, () => fetchData(q.value, offset.value, limit.value))
-watch(filterResultId, () => fetchData(q.value, offset.value, limit.value))
-watch(filterStatus, () => fetchData(q.value, offset.value, limit.value))
-watch(filterSourceId, () => fetchData(q.value, offset.value, limit.value))
+watch(q, debounce(() => reloadData(), 300))
+watch(filterResultId, () => reloadData())
+watch(filterStatus, () => reloadData())
+watch(filterSourceId, () => reloadData())
+//watch(filterSourceId, () => { router.push({ path: '/', query: { filter: filterSourceId.value }})  })
+
+//watch (() => route.query, async newQuery => {
+//  console.log(1, newQuery)
+//}, { deep: true })
 </script>
 
 <template>
@@ -231,6 +252,13 @@ watch(filterSourceId, () => fetchData(q.value, offset.value, limit.value))
                         :value="item.id"
                     >{{ item.name }}</option>
                 </select>
+            </div>
+            <div class="pl-4">
+                  <button
+                        type="button"
+                        class="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
+                        @click="removeAllFilters"
+                    >Remove All</button>
             </div>
 
             <div class="ml-auto flex items-center">
