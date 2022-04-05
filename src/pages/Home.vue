@@ -141,12 +141,8 @@ const removeAllFilters = () => {
     filterStatus.value = 0
     filterSourceId.value = 0
 }
-const updateRouteQuery = (data) => {
-    const query = { ...data }
-    if (query.page < 2) {
-        delete query.page
-    }
-    router.push({ path: '', query })
+const removeQ = () => {
+  q.value = ''
 }
 const removeSourceId = () => {
     filterSourceId.value = 0
@@ -156,6 +152,13 @@ const removeStatus = () => {
 }
 const removeResultId = () => {
     filterResultId.value = 0
+}
+const updateRouteQuery = (data) => {
+    const query = { ...data }
+    if (query.page < 2) {
+        delete query.page
+    }
+    router.push({ path: '', query })
 }
 const toQueryString = (query) => {
     const { q, filter, sort } = query
@@ -254,6 +257,22 @@ watch(updatedQuery, () => {
                         placeholder="Search for items"
                         v-model="q"
                     />
+                     <svg
+                    @click="removeQ"
+                    :class="{ 'hidden': !q }"
+                    class="w-5 h-5 absolute right-3 top-2.5 cursor-pointer text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                    />
+                </svg>
                 </div>
             </div>
             <div class="relative min-w-min">
