@@ -1,5 +1,5 @@
 <script setup>
-import { ref, inject, onMounted, watch, computed, shallowRef } from 'vue'
+import { ref, inject, onMounted, watch, computed } from 'vue'
 import { debounce } from 'lodash'
 import { useRoute } from 'vue-router'
 
@@ -9,7 +9,6 @@ import IsLoggedIn from '../components/auths/IsLoggedIn.vue'
 import ModalImportContactsCSV from '../components/modals/ModalImportContactsCSV.vue'
 
 const DEFAULT_LIMIT = 30
-const DEFAULT_OFFSET = 0
 const STATUS = {
     KHACH_HANG_MOI: 'KhachHangMoi',
     CHUA_LIEN_LAC_DUOC: 'ChuaLienLacDuoc'
@@ -17,8 +16,7 @@ const STATUS = {
 
 const route = useRoute()
 const q = ref('')
-const page = ref(0)
-const offset = ref(DEFAULT_OFFSET)
+const page = ref(1)
 const limit = ref(DEFAULT_LIMIT)
 const totalEntries = ref(0)
 const isNameAsc = ref(true)
@@ -34,37 +32,10 @@ const columnsName = ref([
     'Contact', 'Address', 'Notes', 'Source', 'Status/Result'
 ])
 
-const checkQueryPrefix = (query) => {
-    if (query.includes('?')) {
-        return
-    }
-
-    return `?${query}`
-}
-
-const fetchData = (q = '', offset = DEFAULT_OFFSET, limit = DEFAULT_LIMIT) => {
+const fetchData = (query = '') => {
     const configs = {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
     }
-    let query = ''
-    if (q) {
-        query += `q=${q}`
-    }
-    const filters = []
-    if (sortBySource.value) {
-        filters.push(sortBySource.value)
-    }
-    if (sortByStatus.value) {
-        filters.push(sortByStatus.value)
-    }
-    if (sortByResultIdQuery.value) {
-        filters.push(sortByResultIdQuery.value)
-    }
-    query += `${q ? '&' : ''}filter=${filters.join(',')}`
-    query += `&sort=${sortByNameQuery.value}`
-    query += `&offset=${offset}&limit=${limit}`
-    query = checkQueryPrefix(query)
-    //console.log(query)
     const url = `https://demo.nodeapis.com/contacts${query}`
     $api.get(url, configs).then(response => {
         items.value = response?.data?.data
@@ -81,25 +52,19 @@ const fetchData = (q = '', offset = DEFAULT_OFFSET, limit = DEFAULT_LIMIT) => {
 }
 
 const next = () => {
-    page.value += 1
-    offset.value = page.value * limit.value
-    if (page.value * limit.value > totalEntries.value) {
-        page.value -= 1
-        offset.value = page.value * limit.value
+    if (notAllowNext.value) {
         return
     }
-    fetchData(q.value, offset.value, limit.value)
+
+    page.value += 1
 }
 
 const previous = () => {
-    page.value -= 1
-    offset.value = page.value * limit.value
-    if (page.value < 0) {
-        page.value = 0
-        offset.value = page.value * limit.value
+    if (notAllowPrevious.value) {
         return
     }
-    fetchData(q.value, offset.value, limit.value)
+
+    page.value -= 1
 }
 
 const exportCSV = () => {
@@ -108,9 +73,9 @@ const exportCSV = () => {
     }
 
     $api.get('https://demo.nodeapis.com/contacts/csv', configs).then(response => {
-        var downloadLink = document.createElement("a");
-        var blob = new Blob(["\ufeff", response.data]);
-        var url = URL.createObjectURL(blob);
+        const downloadLink = document.createElement("a");
+        const blob = new Blob(["\ufeff", response.data]);
+        const url = URL.createObjectURL(blob);
         downloadLink.href = url;
         downloadLink.download = `Contacts - ${new Date().toLocaleDateString('vi-VN')}.csv`;
 
@@ -143,46 +108,89 @@ const getContactSources = () => {
 }
 
 onMounted(() => {
-    fetchData()
     getContactResults()
     getContactSources()
+    fetchData(toQueryString(route.query))
 })
 
 const sortByName = () => {
     isNameAsc.value = !isNameAsc.value
 }
-const reloadData = () => {
-    offset.value = 0
-    page.value = 0
-    fetchData(q.value, offset.value, limit.value)
-}
 const removeAllFilters = () => {
+    q.value = ''
     filterResultId.value = 0
     filterStatus.value = 0
     filterSourceId.value = 0
-    reloadData()
 }
-// const updateRouteQuery = () => {
+const updateRouteQuery = (data) => {
+    const query = { ...data }
+    if (query.page < 2) {
+        delete query.page
+    }
+    router.push({ path: '', query })
+}
+const removeSourceId = () => {
+    filterSourceId.value = 0
+}
+const removeStatus = () => {
+    filterStatus.value = 0
+}
+const removeResultId = () => {
+    filterResultId.value = 0
+}
+const toQueryString = (query) => {
+    const { q, filter, sort } = query
+    return `?q=${q ?? ''}&filter=${filter ?? ''}&sort=${sort ?? ''}&offset=${offset.value ?? ''}&limit=${limit.value ?? ''}`
+}
 
-// }
-
-const fromEntry = computed(() => totalEntries.value > 0 ? page.value * limit.value + 1 : 0) 
-const toEntry = computed(() => (page.value + 1) * limit.value > totalEntries.value ? totalEntries.value : (page.value + 1) * limit.value)
+const notAllowNext = computed(() => (page.value + 1) > Math.ceil(totalEntries.value / limit.value))
+const notAllowPrevious = computed(() => page.value - 1 < 0 || page.value === 1)
+const fromEntry = computed(() => totalEntries.value === '0' ? 0 : (offset.value + 1))
+const toEntry = computed(() => notAllowNext.value ? totalEntries.value : limit.value * page.value)
 const sortByNameQuery = computed(() => isNameAsc.value ? 'name.asc' : 'name.desc')
 const sortByResultIdQuery = computed(() => filterResultId.value ? `ResultId.${filterResultId.value}` : '')
 const sortByStatus = computed(() => filterStatus.value ? `Status.${filterStatus.value}` : '')
 const sortBySource = computed(() => filterSourceId.value ? `SourceId.${filterSourceId.value}` : '')
+const offset = computed(() => limit.value * (page.value - 1))
+const updatedQuery = computed(() => {
+    let query = {}
+    if (q.value) {
+        query.q = q.value
+    }
 
-watch(isNameAsc, () => fetchData(q.value, offset.value, limit.value))
-watch(q, debounce(() => reloadData(), 300))
-watch(filterResultId, () => reloadData())
-watch(filterStatus, () => reloadData())
-watch(filterSourceId, () => reloadData())
-//watch(filterSourceId, () => { router.push({ path: '/', query: { filter: filterSourceId.value }})  })
+    const filters = []
+    if (sortBySource.value) {
+        filters.push(sortBySource.value)
+    }
+    if (sortByStatus.value) {
+        filters.push(sortByStatus.value)
+    }
+    if (sortByResultIdQuery.value) {
+        filters.push(sortByResultIdQuery.value)
+    }
+    if (filters.length > 0) {
+        query.filter = filters.join(',')
+    }
 
-//watch (() => route.query, async newQuery => {
-//  console.log(1, newQuery)
-//}, { deep: true })
+    query.sort = sortByNameQuery.value
+
+    query.page = page.value > 0 ? page.value : 1
+
+    return query
+})
+const updatedQueryToString = computed(() => toQueryString(updatedQuery.value))
+
+watch(isNameAsc, () => updateRouteQuery(updatedQuery.value))
+watch(q, debounce(() => updateRouteQuery(updatedQuery.value, 300)))
+watch(filterResultId, () => updateRouteQuery(updatedQuery.value))
+watch(filterStatus, () => updateRouteQuery(updatedQuery.value))
+watch(filterSourceId, () => updateRouteQuery(updatedQuery.value))
+watch(page, () => updateRouteQuery(updatedQuery.value))
+
+watch(updatedQuery, () => {
+    fetchData(updatedQueryToString.value)
+})
+
 </script>
 
 <template>
@@ -217,7 +225,7 @@ watch(filterSourceId, () => reloadData())
                     />
                 </div>
             </div>
-            <div>
+            <div class="relative min-w-min">
                 <select
                     class="block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                     v-model="filterSourceId"
@@ -229,8 +237,24 @@ watch(filterSourceId, () => reloadData())
                         :value="item.id"
                     >{{ item.name }}</option>
                 </select>
+                <svg
+                    @click="removeSourceId"
+                    :class="{ 'hidden': !filterSourceId }"
+                    class="w-5 h-5 absolute right-1 top-2 cursor-pointer bg-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                    />
+                </svg>
             </div>
-            <div class="px-4">
+            <div class="px-4 relative min-w-min">
                 <select
                     class="block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                     v-model="filterStatus"
@@ -239,8 +263,24 @@ watch(filterSourceId, () => reloadData())
                     <option :value="STATUS.KHACH_HANG_MOI">{{ STATUS.KHACH_HANG_MOI }}</option>
                     <option :value="STATUS.CHUA_LIEN_LAC_DUOC">{{ STATUS.CHUA_LIEN_LAC_DUOC }}</option>
                 </select>
+                <svg
+                    @click="removeStatus"
+                    :class="{ 'hidden': !filterStatus }"
+                    class="w-5 h-5 absolute right-5 top-2 cursor-pointer bg-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                    />
+                </svg>
             </div>
-            <div>
+            <div class="relative min-w-min">
                 <select
                     class="block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                     v-model="filterResultId"
@@ -252,13 +292,29 @@ watch(filterSourceId, () => reloadData())
                         :value="item.id"
                     >{{ item.name }}</option>
                 </select>
+                <svg
+                    @click="removeResultId"
+                    :class="{ 'hidden': !filterResultId }"
+                    class="w-5 h-5 absolute right-1 top-2 cursor-pointer bg-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                    />
+                </svg>
             </div>
             <div class="pl-4">
-                  <button
-                        type="button"
-                        class="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
-                        @click="removeAllFilters"
-                    >Remove All</button>
+                <button
+                    type="button"
+                    class="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
+                    @click="removeAllFilters"
+                >Remove All</button>
             </div>
 
             <div class="ml-auto flex items-center">
@@ -368,6 +424,7 @@ watch(filterSourceId, () => reloadData())
                 <!-- Buttons -->
                 <button
                     @click="previous"
+                    :class="{ 'cursor-not-allowed': notAllowPrevious }"
                     class="inline-flex items-center py-2 px-4 text-sm font-medium text-white bg-gray-800 rounded-l hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                 >
                     <svg
@@ -386,6 +443,7 @@ watch(filterSourceId, () => reloadData())
                 </button>
                 <button
                     @click="next"
+                    :class="{ 'cursor-not-allowed': notAllowNext }"
                     class="inline-flex items-center py-2 px-4 text-sm font-medium text-white bg-gray-800 rounded-r border-0 border-l border-gray-700 hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                 >
                     Next
