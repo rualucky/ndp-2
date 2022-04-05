@@ -57,6 +57,7 @@ const next = () => {
     }
 
     page.value += 1
+    updateRouteQuery(updatedQuery.value)
 }
 
 const previous = () => {
@@ -65,6 +66,7 @@ const previous = () => {
     }
 
     page.value -= 1
+    updateRouteQuery(updatedQuery.value)
 }
 
 const exportCSV = () => {
@@ -108,6 +110,23 @@ const getContactSources = () => {
 }
 
 onMounted(() => {
+    const { q: routeQ, filter, sort, page: routePage = 1 } = route.query
+    q.value = routeQ ?? ''
+    const filters = filter?.split(',') ?? [] 
+    const [, sourceValue] =  filters.find(item => item.includes('SourceId'))?.split('.') ?? []
+    if (sourceValue) {
+        filterSourceId.value = sourceValue
+    }
+    const [, statusValue] =  filters.find(item => item.includes('Status'))?.split('.') ?? []
+    if (statusValue) {
+        filterStatus.value = statusValue
+    }
+    const [, resultValue] =  filters.find(item => item.includes('ResultId'))?.split('.') ?? []
+    if (resultValue) {
+        filterResultId.value = resultValue
+    }
+    isNameAsc.value = sort?.includes('asc')
+    page.value = +routePage
     getContactResults()
     getContactSources()
     fetchData(toQueryString(route.query))
@@ -181,11 +200,23 @@ const updatedQuery = computed(() => {
 const updatedQueryToString = computed(() => toQueryString(updatedQuery.value))
 
 watch(isNameAsc, () => updateRouteQuery(updatedQuery.value))
-watch(q, debounce(() => updateRouteQuery(updatedQuery.value, 300)))
-watch(filterResultId, () => updateRouteQuery(updatedQuery.value))
-watch(filterStatus, () => updateRouteQuery(updatedQuery.value))
-watch(filterSourceId, () => updateRouteQuery(updatedQuery.value))
-watch(page, () => updateRouteQuery(updatedQuery.value))
+watch(q, debounce(() => {
+    page.value = 1
+    updateRouteQuery(updatedQuery.value)
+}, 300))
+watch(filterResultId, () => {
+    page.value = 1
+    updateRouteQuery(updatedQuery.value)
+})
+watch(filterStatus, () => {
+    page.value = 1
+    updateRouteQuery(updatedQuery.value)
+}
+)
+watch(filterSourceId, () => {
+    page.value = 1
+    updateRouteQuery(updatedQuery.value)
+})
 
 watch(updatedQuery, () => {
     fetchData(updatedQueryToString.value)
