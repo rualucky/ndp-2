@@ -2,6 +2,7 @@
 import { ref, inject, onMounted, watch, computed, onBeforeUnmount } from 'vue'
 import { debounce } from 'lodash'
 import { useRoute } from 'vue-router'
+import moment from 'moment'
 
 import router from '../router'
 import DropdownHomePage from '../components/dropdowns/DropdownHomePage.vue'
@@ -29,7 +30,7 @@ const filterSourceId = ref(0)
 const $api = inject('$api')
 const items = ref([])
 const columnsName = ref([
-    'Contact', 'Address', 'Notes', 'Source', 'Status/Result'
+    'Contacts', 'Address-Note', 'Source', 'Status-Result', 'Updated At'
 ])
 
 const fetchData = (query = '') => {
@@ -125,11 +126,6 @@ onMounted(() => {
     page.value = +routePage
     getContactResults()
     getContactSources()
-})
-
-onBeforeUnmount(() => {
-    console.log('AAAAAAAAa')
-  q.value = ''
 })
 
 const sortByName = () => {
@@ -418,9 +414,9 @@ watch(updatedQuery, () => {
                         </div>
                     </th>
                     <th v-for="column in columnsName" scope="col" class="px-6 py-3">{{ column }}</th>
-                    <th scope="col" class="px-6 py-3">
+                    <!-- <th scope="col" class="px-6 py-3">
                         <span class="sr-only">Edit</span>
-                    </th>
+                    </th> -->
                 </tr>
             </thead>
             <tbody>
@@ -432,26 +428,35 @@ watch(updatedQuery, () => {
                     <th
                         scope="row"
                         class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
-                    >{{ item?.name }}</th>
+                    >
+                     <a
+                            href="#"
+                            class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                        >
+                            <router-link :to="{ name: 'contacts', params: { id: item?.id } }">{{item?.name}}</router-link>
+                        </a> 
+                    </th>
                     <td class="px-6 py-4 flex flex-col">
                         <span>{{ item?.mobile }}</span>
                         {{ item?.email }}
                     </td>
                     <td class="px-6 py-4 hidden">{{ item?.email }}</td>
-                    <td class="px-6 py-4">{{ item?.address }}</td>
-                    <td class="px-6 py-4">{{ item?.notes }}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col">
+                            <span>{{ item?.address }}</span>
+                            <span>Note: {{ item?.notes }}</span>
+                        </div>
+                    </td>
                     <td class="px-6 py-4">{{ item?.contact_source?.name }}</td>
                     <td class="px-6 py-4 flex flex-col">
                         <span>{{ item?.status }}</span>
                         <span>{{ item?.contact_result?.name }}</span>
                     </td>
                     <td class="px-6 py-4">
-                        <a
-                            href="#"
-                            class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                        >
-                            <router-link :to="{ name: 'contacts', params: { id: item?.id } }">Detail</router-link>
-                        </a>
+                    <div class="flex flex-col">
+                        {{ moment(item?.updated_at).format('DD/MM/YYYY hh:mm:ss') }}
+                        <span>By {{item?.updated_user?.name}}</span>
+                    </div>
                     </td>
                 </tr>
             </tbody>
