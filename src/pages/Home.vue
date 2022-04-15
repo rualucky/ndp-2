@@ -74,7 +74,7 @@ const exportCSV = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
     }
 
-    $api.get('https://demo.nodeapis.com/contacts/csv', configs).then(response => {
+    $api.get(`https://demo.nodeapis.com/contacts/csv${toQueryString(route.query)}`, configs).then(response => {
         const downloadLink = document.createElement("a");
         const blob = new Blob(["\ufeff", response.data]);
         const url = URL.createObjectURL(blob);
@@ -110,20 +110,16 @@ const getContactSources = () => {
 }
 
 onMounted(() => {
-    const { q: routeQ, filter, sort, page: routePage = 1 } = route.query
+    const { q: routeQ, source_id, result_id, status, sort, page: routePage = 1 } = route.query
     q.value = routeQ ?? ''
-    const filters = filter?.split(',') ?? [] 
-    const [, sourceValue] =  filters.find(item => item.includes('SourceId'))?.split('.') ?? []
-    if (sourceValue) {
-        filterSourceId.value = sourceValue
+    if (source_id) {
+        filterSourceId.value = source_id
     }
-    const [, statusValue] =  filters.find(item => item.includes('Status'))?.split('.') ?? []
-    if (statusValue) {
-        filterStatus.value = statusValue
+    if (status) {
+        filterStatus.value = status
     }
-    const [, resultValue] =  filters.find(item => item.includes('ResultId'))?.split('.') ?? []
-    if (resultValue) {
-        filterResultId.value = resultValue
+    if (result_id) {
+        filterResultId.value = result_id
     }
     isNameAsc.value = sort?.includes('asc')
     page.value = +routePage
@@ -161,8 +157,8 @@ const updateRouteQuery = (data) => {
     router.push({ path: '', query })
 }
 const toQueryString = (query) => {
-    const { q, filter, sort } = query
-    return `?q=${q ?? ''}&filter=${filter ?? ''}&sort=${sort ?? ''}&offset=${offset.value ?? ''}&limit=${limit.value ?? ''}`
+    const { q = '', source_id = '', result_id = '', status = '', sort = '' } = query
+    return `?q=${q}&source_id=${source_id}&result_id=${result_id}&status=${status}&sort=${sort}&offset=${offset.value ?? ''}&limit=${limit.value ?? ''}`
 }
 
 const notAllowNext = computed(() => (page.value + 1) > Math.ceil(totalEntries.value / limit.value))
@@ -170,9 +166,6 @@ const notAllowPrevious = computed(() => page.value - 1 < 0 || page.value === 1)
 const fromEntry = computed(() => totalEntries.value === '0' ? 0 : (offset.value + 1))
 const toEntry = computed(() => notAllowNext.value ? totalEntries.value : limit.value * page.value)
 const sortByNameQuery = computed(() => isNameAsc.value ? 'name.asc' : 'name.desc')
-const sortByResultIdQuery = computed(() => filterResultId.value ? `ResultId.${filterResultId.value}` : '')
-const sortByStatus = computed(() => filterStatus.value ? `Status.${filterStatus.value}` : '')
-const sortBySource = computed(() => filterSourceId.value ? `SourceId.${filterSourceId.value}` : '')
 const offset = computed(() => limit.value * (page.value - 1))
 const updatedQuery = computed(() => {
     let query = {}
@@ -180,18 +173,14 @@ const updatedQuery = computed(() => {
         query.q = q.value
     }
 
-    const filters = []
-    if (sortBySource.value) {
-        filters.push(sortBySource.value)
+    if (filterSourceId.value) {
+        query.source_id = filterSourceId.value
     }
-    if (sortByStatus.value) {
-        filters.push(sortByStatus.value)
+    if (filterStatus.value) {
+        query.status = filterStatus.value
     }
-    if (sortByResultIdQuery.value) {
-        filters.push(sortByResultIdQuery.value)
-    }
-    if (filters.length > 0) {
-        query.filter = filters.join(',')
+    if (filterResultId.value) {
+        query.result_id = filterResultId.value
     }
 
     query.sort = sortByNameQuery.value
