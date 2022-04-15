@@ -12,6 +12,7 @@
     "axios": "^0.26.1",
     "firebase": "^9.6.10",
     "lodash": "^4.17.21",
+    "moment": "^2.29.2",
     "tw-elements": "^1.0.0-alpha12",
     "vue": "^3.2.25",
     "vue-axios": "^3.4.1",

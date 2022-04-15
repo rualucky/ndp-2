@@ -1,5 +1,5 @@
 <script setup>
-import { ref, inject, onMounted, watch, computed } from 'vue'
+import { ref, inject, onMounted, watch, computed, onBeforeUnmount } from 'vue'
 import { debounce } from 'lodash'
 import { useRoute } from 'vue-router'
 
@@ -125,7 +125,11 @@ onMounted(() => {
     page.value = +routePage
     getContactResults()
     getContactSources()
-    fetchData(toQueryString(route.query))
+})
+
+onBeforeUnmount(() => {
+    console.log('AAAAAAAAa')
+  q.value = ''
 })
 
 const sortByName = () => {
@@ -159,6 +163,9 @@ const updateRouteQuery = (data) => {
 const toQueryString = (query) => {
     const { q = '', source_id = '', result_id = '', status = '', sort = '' } = query
     return `?q=${q}&source_id=${source_id}&result_id=${result_id}&status=${status}&sort=${sort}&offset=${offset.value ?? ''}&limit=${limit.value ?? ''}`
+}
+const reloadContacts = () => {
+    fetchData(updatedQueryToString.value)
 }
 
 const notAllowNext = computed(() => (page.value + 1) > Math.ceil(totalEntries.value / limit.value))
@@ -221,7 +228,7 @@ watch(updatedQuery, () => {
     <div class="relative overflow-x-auto shadow-md">
         <div class="flex items-center">
             <div class="p-4 pl-0 justify-start">
-                <label for="table-search" class="sr-only">Search</label>
+                <label for="home-table-search" class="sr-only">Search</label>
                 <div class="relative mt-1">
                     <div
                         class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
@@ -241,9 +248,9 @@ watch(updatedQuery, () => {
                     </div>
                     <input
                         type="text"
-                        id="table-search"
+                        id="home-table-search"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-80 pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-tr rounded-br"
-                        placeholder="Search for items"
+                        placeholder="Search for contacts"
                         v-model="q"
                     />
                      <svg
@@ -357,7 +364,7 @@ watch(updatedQuery, () => {
             </div>
 
             <div class="ml-auto flex items-center">
-                <ModalImportContactsCSV />
+                <ModalImportContactsCSV @reload="reloadContacts"/>
                 <div class="flex space-x-2 justify-center px-4">
                     <button
                         type="button"
