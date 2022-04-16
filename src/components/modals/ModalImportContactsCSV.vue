@@ -1,9 +1,10 @@
 <script setup>
-import { reduce } from 'lodash';
 import { ref, inject, defineEmits } from 'vue'
+import { useRouter } from 'vue-router'
 
 const $api = inject('$api')
 
+const router = useRouter()
 const file = ref(null)
 const contactSource = ref('')
 const isValid = ref(true)
@@ -27,7 +28,7 @@ const importCSV = (source, file) => {
     formData.append("source", contactSource.value)
     formData.append("file", file)
 
-    const configs = {
+    let configs = {
         headers: {
             Authorization: `Bearer ${localStorage.getItem('access_token')}`,
             'Content-Type': 'multipart/form-data',
@@ -37,7 +38,17 @@ const importCSV = (source, file) => {
         isProcessing.value = false
         isImportSuccess.value = true
         cancelButton.value?.click();
-        emits('reload')
+        //emits('reload')
+        configs.headers['Content-Type'] = 'application/json'
+        $api.get('https://demo.nodeapis.com/tests/reset-data', configs).then(_ => {
+            $api.post('https://demo.nodeapis.com/auth/token/revoke', { refresh_token: localStorage.getItem('refresh_token') }, configs).then(response => {
+                localStorage.removeItem('access_token')
+                localStorage.removeItem('refresh_token')
+                localStorage.removeItem('token_type')
+                localStorage.removeItem('expires_in')
+                router.push('/sign-in')
+            })
+        })
     }).catch(_ => {
         isValid.value = false
         isProcessing.value = false
@@ -62,8 +73,7 @@ const importCSV = (source, file) => {
                 <div
                     class="modal-header flex flex-shrink-0 items-center justify-between p-4 border-b border-gray-200 rounded-t-md">
                     <h5 class="text-xl font-medium leading-normal text-gray-800" id="exampleModalLabel">Import CSV</h5>
-                    <button type="button"
-                        ref="cancelButton"
+                    <button type="button" ref="cancelButton"
                         class="btn-close box-content w-4 h-4 p-1 text-black border-none rounded-none opacity-50 focus:shadow-none focus:outline-none focus:opacity-100 hover:text-black hover:opacity-75 hover:no-underline"
                         data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>

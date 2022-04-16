@@ -10,8 +10,7 @@ const router = useRouter()
 
 const signOut = () => {
     const configs = {
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-        contentType: 'application/json'
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
     }
     $api.post('https://demo.nodeapis.com/auth/token/revoke', { refresh_token: localStorage.getItem('refresh_token') }, configs).then(response => {
         localStorage.removeItem('access_token')
