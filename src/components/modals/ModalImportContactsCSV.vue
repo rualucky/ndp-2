@@ -38,17 +38,15 @@ const importCSV = (source, file) => {
         isProcessing.value = false
         isImportSuccess.value = true
         cancelButton.value?.click();
-        //emits('reload')
-        configs.headers['Content-Type'] = 'application/json'
-        $api.get('https://demo.nodeapis.com/tests/reset-data', configs).then(_ => {
-            $api.post('https://demo.nodeapis.com/auth/token/revoke', { refresh_token: localStorage.getItem('refresh_token') }, configs).then(response => {
-                localStorage.removeItem('access_token')
-                localStorage.removeItem('refresh_token')
-                localStorage.removeItem('token_type')
-                localStorage.removeItem('expires_in')
-                router.push('/sign-in')
-            })
-        })
+        emits('reload')
+        //    configs.headers['Content-Type'] = 'application/json'
+        //$api.post('https://demo.nodeapis.com/auth/token/revoke', { refresh_token: localStorage.getItem('refresh_token') }, configs).then(response => {
+        //localStorage.removeItem('access_token')
+        //localStorage.removeItem('refresh_token')
+        //localStorage.removeItem('token_type')
+        //localStorage.removeItem('expires_in')
+        //router.push('/sign-in')
+        //})
     }).catch(_ => {
         isValid.value = false
         isProcessing.value = false

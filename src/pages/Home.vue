@@ -161,6 +161,8 @@ const toQueryString = (query) => {
     return `?q=${q}&source_id=${source_id}&result_id=${result_id}&status=${status}&sort=${sort}&offset=${offset.value ?? ''}&limit=${limit.value ?? ''}`
 }
 const reloadContacts = () => {
+    getContactSources()
+    getContactResults()
     fetchData(updatedQueryToString.value)
 }
 
