@@ -55,7 +55,7 @@ const update = (action, data) => {
   }
   if (action === ACTION.CREATE) {
     $api.post(`https://demo.nodeapis.com/users`, rawData, configs).then(response => {
-      if (response && response.status === 200) {
+      if (response && [200, 201].includes(response.status)) {
         emits('reload')
         close()
       }
@@ -64,7 +64,7 @@ const update = (action, data) => {
   }
 
   $api.patch(`https://demo.nodeapis.com/users/${rawData.id}`, rawData, configs).then(response => {
-    if (response && response.status === 200) {
+    if (response && [200, 201].includes(response.status)) {
         emits('reload')
         close()
     }
