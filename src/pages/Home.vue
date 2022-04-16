@@ -1,5 +1,5 @@
 <script setup>
-import { ref, inject, onMounted, watch, computed, onBeforeUnmount } from 'vue'
+import { ref, inject, onMounted, watch, computed } from 'vue'
 import { debounce } from 'lodash'
 import { useRoute } from 'vue-router'
 import moment from 'moment'
@@ -247,6 +247,7 @@ watch(updatedQuery, () => {
                         id="home-table-search"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-80 pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-tr rounded-br"
                         placeholder="Search for contacts"
+                        autocomplete="chrome-off"
                         v-model="q"
                     />
                      <svg

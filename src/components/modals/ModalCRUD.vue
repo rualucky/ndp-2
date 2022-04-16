@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeMount, onMounted, isProxy, toRaw, inject, ref, defineProps, defineExpose, computed } from 'vue'
+import { isProxy, toRaw, inject, ref, defineProps, defineExpose, defineEmits, computed } from 'vue'
 
 const ROLE = {
   ADMIN: 'Admin',
@@ -23,7 +23,6 @@ const props = defineProps({
   action: String,
   isHiddenTrigger: Boolean
 })
-
 
 const triggerButton = ref(null)
 const triggerCancelButton = ref(null)

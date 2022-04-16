@@ -17,13 +17,13 @@ const router = createRouter({
       component: () => import("../pages/SignIn.vue"),
     },
     {
-      path: "/employees",
-      component: () => import("../pages/Employees.vue"),
+      path: "/users",
+      component: () => import("../pages/Users.vue"),
     },
     {
-      path: "/employees/:id",
-      name: 'employees',
-      component: () => import("../pages/EmployeeDetail.vue"),
+      path: "/users/:id",
+      name: 'users',
+      component: () => import("../pages/UserDetail.vue"),
     },
   ],
 });

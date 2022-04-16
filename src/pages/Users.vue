@@ -1,12 +1,12 @@
 <script setup>
-import { ref, inject, onBeforeMount, onMounted, watch, computed } from 'vue'
+import { ref, inject, onMounted, watch, computed } from 'vue'
 import { debounce } from 'lodash'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import moment from 'moment'
 
-import router from '../router'
 import IsLoggedIn from '../components/auths/IsLoggedIn.vue'
 import ModalCRUD from '../components/modals/ModalCRUD.vue'
+import ModalConfirmDelete from '../components/modals/ModalConfirmDelete.vue'
 
 const DEFAULT_LIMIT = 30
 const ROLE = {
@@ -18,6 +18,7 @@ const STATUS = {
     ACTIVE: 'Active'
 }
 
+const router = useRouter()
 const route = useRoute()
 const q = ref('')
 const page = ref(1)
@@ -30,6 +31,7 @@ const columnsName = ref([
     'Contacts', 'Role', 'Status', 'Updated At'
 ])
 const modalCRUD = ref(null)
+const modalConfirmDelete = ref(null)
 
 const fetchData = (query = '') => {
     const configs = {
@@ -68,10 +70,6 @@ const previous = () => {
     updateRouteQuery(updatedQuery.value)
 }
 
-onBeforeMount(() => {
-    console.log(100, route.query)
-})
-
 onMounted(() => {
     const { q: routeQ, role, status, sort, page: routePage = 1 } = route.query
     q.value = routeQ ?? ''
@@ -106,7 +104,7 @@ const toEntry = computed(() => notAllowNext.value ? totalEntries.value : limit.v
 const sortByNameQuery = computed(() => isNameAsc.value ? 'name.asc' : 'name.desc')
 const offset = computed(() => limit.value * (page.value - 1))
 const updatedQuery = computed(() => {
-    let query = {}
+    const query = {}
     if (q.value) {
         query.q = q.value
     }
@@ -132,7 +130,7 @@ watch(updatedQuery, () => {
 const modalTitle = ref('')
 const modalAction = ref('')
 const createEmployee = () => {
-    modalTitle.value = 'Create Employee'
+    modalTitle.value = 'Create User'
     modalAction.value = 'Create'
     openCRUDModal({
         role: ROLE.TELESALES,
@@ -140,7 +138,7 @@ const createEmployee = () => {
     })
 }
 const updateEmployee = (employee) => {
-    modalTitle.value = 'Update Employee'
+    modalTitle.value = 'Update User'
     modalAction.value = 'Update'
     openCRUDModal(employee)
 }
@@ -150,10 +148,19 @@ const openCRUDModal = (employee = {}) => {
 const reloadEmployees = () => {
     fetchData(updatedQueryToString.value)
 }
+const openConfirmDelete = () => {
+    modalConfirmDelete.value?.open()
+}
+const backToHome = () => {
+    router.push('/')
+}
 </script>
 
 <template>
     <IsLoggedIn />
+    <ModalConfirmDelete></ModalConfirmDelete>
+    <ModalCRUD ref="modalCRUD" :isHiddenTrigger="true" :index="'employee-0'" :title="modalTitle" :action="modalAction"
+        @reload="reloadEmployees"></ModalCRUD>
     <div class="relative overflow-x-auto shadow-md">
         <div class="flex items-center">
             <div class="p-4 pl-0 justify-start">
@@ -169,7 +176,7 @@ const reloadEmployees = () => {
                     </div>
                     <input type="text" id="employee-table-search"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-80 pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-tr rounded-br"
-                        placeholder="Search for employees" v-model="q" />
+                        placeholder="Search for users" v-model="q" autocomplete="chrome-off" />
                     <svg @click="removeQ" :class="{ 'hidden': !q }"
                         class="w-5 h-5 absolute right-3 top-2.5 cursor-pointer text-white" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -178,13 +185,18 @@ const reloadEmployees = () => {
                     </svg>
                 </div>
             </div>
-            <button type="button"
-            @click="createEmployee"
+            <button type="button" @click="createEmployee"
                 class="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">
-                Create Employee
+                Create User
             </button>
-            <ModalCRUD ref="modalCRUD" :isHiddenTrigger="true" :index="'employee-0'" 
-                :title="modalTitle" :action="modalAction" @reload="reloadEmployees"></ModalCRUD>
+            <div class="ml-auto flex items-center">
+                <div class="flex space-x-2 justify-center px-4">
+                    <button type="button"
+                        class="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
+                        @click="backToHome">Home</button>
+                </div>
+            </div>
+
         </div>
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -234,14 +246,15 @@ const reloadEmployees = () => {
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
-                            <svg @click="updateEmployee(item)" class="w-5 h-5 mr-2 text-blue-500 cursor-pointer" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <svg @click="updateEmployee(item)" class="w-5 h-5 mr-2 text-blue-500 cursor-pointer"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                                 </path>
                             </svg>
-                            <svg class="w-5 h-5 text-red-500 cursor-pointer" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <svg @click="openConfirmDelete" class="w-5 h-5 text-red-500 cursor-pointer" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                                 </path>
@@ -258,7 +271,7 @@ const reloadEmployees = () => {
                 Showing
                 <span class="font-semibold text-gray-900">{{ fromEntry }}</span> to
                 <span class="font-semibold text-gray-900">{{ toEntry }}</span> of
-                <span class="font-semibold text-gray-900">{{ totalEntries }}</span> Employees
+                <span class="font-semibold text-gray-900">{{ totalEntries }}</span> Users
             </span>
             <!-- Buttons -->
             <div class="ml-auto flex items-center">

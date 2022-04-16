@@ -10,6 +10,7 @@
           id="exampleInputEmail1"
           aria-describedby="emailHelp"
           placeholder="Enter username"
+          autocomplete="chrome-off"
           v-model="username"
         />
         <!-- <small id="emailHelp" class="block mt-1 text-xs text-gray-600">We'll never share your email with anyone
@@ -26,6 +27,7 @@
           id="exampleInputPassword1"
           placeholder="Password"
           v-model="password"
+          autocomplete="chrome-off"
         />
       </div>
       <button

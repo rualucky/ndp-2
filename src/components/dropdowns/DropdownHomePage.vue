@@ -1,6 +1,10 @@
 <script setup>
+import { useRouter } from 'vue-router'
 import CheckboxDarkModeVue from '../checkboxs/CheckboxDarkMode.vue';
 import ButtonLogOut from '../auths/ButtonLogOut.vue'
+
+const router = useRouter()
+const goToUsersPage = () => router.push('/users')
 </script>
 <template>
   <div class="flex justify-center">
@@ -39,7 +43,7 @@ import ButtonLogOut from '../auths/ButtonLogOut.vue'
           </li>
           <li class="dropdown-item py-2 px-4 flex">
             <svg class="w-6 h-6 pr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            <router-link to="/employees">Employees</router-link>
+            <span @click="goToUsersPage" class="cursor-pointer">Users</span>
             </li>
           <hr class="h-0 my-2 border border-solid border-t-0 border-gray-700 opacity-25" />
           <li class="dropdown-item py-2 px-4 divide-y">
